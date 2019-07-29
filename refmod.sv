@@ -1,4 +1,4 @@
-import "DPI-C" context function bit [7:0] sqrt(bit [7:0] x)
+import "DPI-C" context function int sqrt(int x);
 
 class refmod extends uvm_component;
     `uvm_component_utils(refmod)
@@ -9,6 +9,8 @@ class refmod extends uvm_component;
     uvm_analysis_imp #(transaction_in, refmod) in;
     uvm_analysis_port #(transaction_out) out;
     
+    event begin_refmodtask;
+
     function new(string name = "refmod", uvm_component parent);
         super.new(name, parent);
         in = new("in", this);
@@ -24,13 +26,13 @@ class refmod extends uvm_component;
         super.run_phase(phase);
         forever begin
             @begin_refmodtask;
-            tr_out = axi4lite_master_transaction#()::type_id::create("tr_out", this);
+            tr_out = transaction_out::type_id::create("tr_out", this);
             tr_out.result = sqrt(tr_in.data);
             out.write(tr_out);
         end
     endtask: run_phase
 
-    virtual function write ( transaction_in t);
+    virtual function write (transaction_in t);
         tr_in = transaction_in#()::type_id::create("tr_in", this);
         tr_in.copy(t);
         $display("TR_IN %h",tr_in.data);

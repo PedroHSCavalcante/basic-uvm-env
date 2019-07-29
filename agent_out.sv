@@ -2,13 +2,13 @@ class agent_out extends uvm_agent;
     driver_out    drv;
     monitor_out   mon;
 
-    uvm_analysis_port #(transaction_out) item_collected_port;
+    uvm_analysis_port #(transaction_out) agt_resp_port;
 
     `uvm_component_utils(agent_out)
 
     function new(string name = "agent_out", uvm_component parent = null);
         super.new(name, parent);
-        item_collected_port = new("item_collected_port", this);
+        agt_resp_port = new("agt_resp_port", this);
     endfunction
 
     virtual function void build_phase(uvm_phase phase);
@@ -19,6 +19,6 @@ class agent_out extends uvm_agent;
 
     virtual function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
-        mon.item_collected_port.connect(item_collected_port);
+        mon.item_collected_port.connect(agt_resp_port);
     endfunction
 endclass: agent_out

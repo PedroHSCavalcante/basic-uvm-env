@@ -13,11 +13,10 @@ class simple_test extends uvm_test;
     super.build_phase(phase);
     env_h = env::type_id::create("env_h", this);
     seq = sequence_in::type_id::create("seq", this);
-
   endfunction
 
   task run_phase(uvm_phase phase);
-    seq.start(env_h.ag_i.sequencer);
+    seq.start(env_h.ag_i.sqr);
   endtask: run_phase
 
 endclass

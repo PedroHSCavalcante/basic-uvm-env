@@ -3,7 +3,7 @@ class env extends uvm_env;
     agent_in    ag_i;
     agent_out   ag_o;
     scoreboard  sb;
-    coverage   cov;
+    coverage    cov;
     
     `uvm_component_utils(env)
 
@@ -21,9 +21,8 @@ class env extends uvm_env;
 
     virtual function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
-        agent.agt_req_port.connect(cov.req_port);
-        agent.agt_resp_port.connect(cov.resp_port);
-        agent.agt_resp_port.connect(sb.ap_comp);
-        agent.agt_req_port.connect(sb.ap_rfm);
+        ag_i.agt_req_port.connect(cov.req_port);
+        ag_o.agt_resp_port.connect(sb.ap_comp);
+        ag_i.agt_req_port.connect(sb.ap_rfm);
     endfunction
 endclass

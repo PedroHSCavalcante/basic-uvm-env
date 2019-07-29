@@ -42,7 +42,7 @@ module sqrt
     .op_en_o          (op_en_w          ),
     .busy_o           (busy_o           ),
     .valid_o          (valid_o          ),
-    .ready_i          (ready_i          ),
+    .ready_i          (ready_i          )
   );
 
   sqrt_proc SQRT_PROC 

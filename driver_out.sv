@@ -2,7 +2,7 @@ typedef virtual output_if output_vif;
 
 class driver_out extends uvm_driver #(transaction_out);
     `uvm_component_utils(driver_out)
-    output_vif vif;
+    output_vif out_vif;
 
     function new(string name = "driver_out", uvm_component parent = null);
         super.new(name, parent);
@@ -10,7 +10,9 @@ class driver_out extends uvm_driver #(transaction_out);
 
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        assert(uvm_config_db#(output_vif)::get(this, "", "vif", vif));
+        if(!uvm_config_db#(output_vif)::get(this, "", "out_vif", out_vif)) begin
+            `uvm_fatal("NOVIF", "failed to get virtual interface")
+        end
     endfunction
 
     virtual task run_phase(uvm_phase phase);
@@ -22,18 +24,18 @@ class driver_out extends uvm_driver #(transaction_out);
     endtask
 
     virtual protected task reset_signals();
-        wait (vif.rst === 1);
+        wait (out_vif.rst === 1);
         forever begin
-            vif.ready <= '0;
-            @(posedge vif.rst);
+            out_vif.ready <= '0;
+            @(posedge out_vif.rst);
         end
     endtask
 
     virtual protected task drive(uvm_phase phase);
-        wait(vif.rst === 1);
-        @(negedge vif.rst);
-        @(posedge vif.clk);
+        wait(out_vif.rst === 1);
+        @(negedge out_vif.rst);
+        @(posedge out_vif.clk);
         
-        vif.ready <= 1;
+        out_vif.ready <= 1;
     endtask
 endclass

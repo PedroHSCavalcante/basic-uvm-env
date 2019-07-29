@@ -1,20 +1,23 @@
 module top;
+  import uvm_pkg::*;
+  import pkg::*;
+  
   logic clk;
   logic rst;
   
   initial begin
-    clk = 0;
+    clk = 1;
     rst = 1;
-    #22 rst = 0;
-    
+    #20 rst = 0;
+    #20 rst = 1;
   end
   
-  always #5 clk = !clk;
+  always #10 clk = !clk;
   
-  input_if in(clk, rst);
-  output_if out(clk, rst);
+  input_if in(.clk(clk), .rst(rst));
+  output_if out(.clk(clk), .rst(rst));
   
-  sqrt sqrt(.clk_i(in.clk),
+  sqrt sqrt(.clk_i(clk),
             .enb_i(in.enable),
             .dt_i(in.data_i),
             .valid_i(in.valid),
@@ -25,7 +28,7 @@ module top;
             );
 
   initial begin
-    `ifdef INCA
+    `ifdef XCELIUM
        $recordvars();
     `endif
     `ifdef VCS
@@ -36,8 +39,8 @@ module top;
        set_config_int("*", "recording_detail", 1);
     `endif
     
-    uvm_config_db#(input_vif)::set(uvm_root::get(), "*.env_h.ag_i.*", "vif", in);
-    uvm_config_db#(output_vif)::set(uvm_root::get(), "*.env_h.ag_o.*",  "vif", out);
+    uvm_config_db#(virtual input_if)::set(uvm_root::get(), "*", "in_vif", in);
+    uvm_config_db#(virtual output_if)::set(uvm_root::get(), "*",  "out_vif", out);
     
     run_test("simple_test");
   end

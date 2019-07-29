@@ -26,11 +26,11 @@ class coverage extends uvm_component;
   endtask: run_phase
 
   
-  function void write_req(transaction_in t);
+  function void write(transaction_in t);
     n_tr = n_tr + 1;
-    if(n_tr >= min_n_tr)begin
+    if(n_tr >= min_tr)begin
       running_phase.drop_objection(this);
     end
-  endfunction: write_req
+  endfunction: write
 
 endclass : coverage

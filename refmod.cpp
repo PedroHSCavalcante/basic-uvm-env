@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <math.h>
 
-extern "C" bit [7:0] sqrt(bit [7:0] x){
+extern "C" double sqrt(double x){
   return floor(sqrt((x)));
 }

@@ -1,5 +1,5 @@
 class monitor_in extends uvm_monitor;
-    input_vif  vif;
+    input_vif  in_vif;
     event begin_record, end_record;
     transaction_in tr;
     uvm_analysis_port #(transaction_in) item_collected_port;
@@ -12,7 +12,9 @@ class monitor_in extends uvm_monitor;
 
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        assert(uvm_config_db#(input_vif)::get(this, "", "vif", vif));
+         if(!uvm_config_db#(input_vif)::get(this, "", "in_vif", in_vif)) begin
+            `uvm_fatal("NOVIF", "failed to get virtual interface")
+        end
         tr = transaction_in::type_id::create("tr", this);
     endfunction
 
@@ -25,19 +27,16 @@ class monitor_in extends uvm_monitor;
     endtask
 
     virtual task collect_transactions(uvm_phase phase);
-        wait(vif.rst === 1);
-        @(negedge vif.rst);
-        
         forever begin
             do begin
-                @(posedge vif.clk);
-            end while (vif.valid === 0 || vif.ready === 0);
+                @(posedge in_vif.clk);
+            end while (in_vif.valid === 0 || in_vif.ready === 0);
             -> begin_record;
             
-            tr.data = vif.data_i;
+            tr.data = in_vif.data_i;
             item_collected_port.write(tr);
 
-            @(posedge vif.clk);
+            @(posedge in_vif.clk);
             -> end_record;
         end
     endtask

@@ -1,6 +1,6 @@
 class monitor_out extends uvm_monitor;
     `uvm_component_utils(monitor_out)
-    output_vif  vif;
+    output_vif  out_vif;
     event begin_record, end_record;
     transaction_out tr;
     uvm_analysis_port #(transaction_out) item_collected_port;
@@ -12,7 +12,9 @@ class monitor_out extends uvm_monitor;
 
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        assert(uvm_config_db#(output_vif)::get(this, "", "vif", vif));
+         if(!uvm_config_db#(output_vif)::get(this, "", "out_vif", out_vif)) begin
+            `uvm_fatal("NOout_VIF", "failed to get virtual interface")
+        end
         tr = transaction_out::type_id::create("tr", this);
     endfunction
 
@@ -25,19 +27,19 @@ class monitor_out extends uvm_monitor;
     endtask
 
     virtual task collect_transactions(uvm_phase phase);
-        wait(vif.rst === 1);
-        @(negedge vif.rst);
+        wait(out_vif.rst === 1);
+        @(negedge out_vif.rst);
         
         forever begin
             do begin
-                @(posedge vif.clk);
-            end while (vif.valid === 0 || vif.ready === 0);
+                @(posedge out_vif.clk);
+            end while (out_vif.valid === 0 || out_vif.ready === 0);
             -> begin_record;
             
-            tr.result = vif.data_o;
+            tr.result = out_vif.data_o;
             item_collected_port.write(tr);
 
-            @(posedge vif.clk);
+            @(posedge out_vif.clk);
             -> end_record;
         end
     endtask
