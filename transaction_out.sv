@@ -1,5 +1,5 @@
 class transaction_out extends uvm_sequence_item;
-  rand bit result;
+  rand bit [7:0] result;
 
   function new(string name = "");
     super.new(name);

@@ -1,5 +1,5 @@
 class transaction_in extends uvm_sequence_item;
-  rand bit data;
+  rand bit [7:0] data;
 
   function new(string name = "");
     super.new(name);
