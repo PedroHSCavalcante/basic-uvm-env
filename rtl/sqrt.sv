@@ -3,8 +3,10 @@ module sqrt
     input  logic        clk_i,
     input  logic        enb_i,
     input  logic [7:0]  dt_i,
+    input  logic        valid,
     output logic        busy_o,
-    output logic [7:0]  dt_o
+    output logic [7:0]  dt_o,
+    output logic        ready
   );
 
   logic clk_gated_w;
@@ -27,6 +29,7 @@ module sqrt
     .enb_i            (enb_i            ),
     .s_i              (s_w              ),
     .x_i              (x_w              ),
+    .valid            (valid            ),
     .restart_flag_o   (restart_flag_w   ),
     .mux_ctrl1_o      (mux_ctrl1_w      ),
     .mux_ctrl2_o      (mux_ctrl2_w      ),
@@ -34,7 +37,8 @@ module sqrt
     .s_en_o           (s_en_w           ),
     .r_en_o           (r_en_w           ),
     .op_en_o          (op_en_w          ),
-    .busy_o           (busy_o           )
+    .busy_o           (busy_o           ),
+    .ready            (ready            ),
   );
 
   sqrt_proc SQRT_PROC 

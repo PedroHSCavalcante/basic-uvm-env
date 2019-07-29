@@ -4,6 +4,7 @@ module sqrt_ctrl
     input  logic        enb_i,
     input  logic [8:0]  s_i,
     input  logic [7:0]  x_i,
+    input  logic        valid,
     output logic        restart_flag_o,
     output logic        mux_ctrl1_o,
     output logic [1:0]  mux_ctrl2_o,
@@ -11,7 +12,8 @@ module sqrt_ctrl
     output logic        s_en_o,
     output logic        r_en_o,
     output logic        op_en_o,
-    output logic        busy_o
+    output logic        busy_o,
+    output logic        ready
   );
 
   enum {
@@ -36,7 +38,7 @@ module sqrt_ctrl
   always_comb
   begin
     unique case(state)
-      IDLE:     state_next = COMP;
+      IDLE:     state_next = (valid) ? (COMP) : (IDLE);
       COMP:     state_next = (s_i > x_i) ? (END) : (DSUM);
       DSUM:     state_next = SSUM1;
       SSUM1:    state_next = SSUM2;
@@ -53,13 +55,14 @@ module sqrt_ctrl
     unique case(state)
       IDLE: // Ambiguo de IDLE e RESTART - Inserindo valores iniciais
       begin
-        restart_flag_o  = 1'b1;
+        restart_flag_o  = valid;
         mux_ctrl1_o     = 1'b0;
         mux_ctrl2_o     = 2'b00;
         d_en_o          = 1'b0;
         s_en_o          = 1'b0;
         r_en_o          = 1'b0;
         op_en_o         = 1'b0;
+        ready           = 1'b0;
       end
       COMP: // Bifurcação entre DSUM e END - Inserindo D e 2 nos operandos
       begin
@@ -130,6 +133,7 @@ module sqrt_ctrl
         s_en_o          = 1'b0;
         r_en_o          = 1'b1;
         op_en_o         = 1'b0;
+        ready           = 1'b1;
       end
       default:
       begin
