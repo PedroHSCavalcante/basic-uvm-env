@@ -1,6 +1,6 @@
-interface input_if(input clk, rst);
-    logic [7:0] data;
+interface input_if(input clk, rstn);
+    logic [7:0] data_i;
     logic enable;
     
-    modport in(input clk, rst, data, enable);
+    modport port(input clk, rst, data, enable);
 endinterface
