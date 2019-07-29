@@ -10,6 +10,6 @@ class transaction_in extends uvm_sequence_item;
   `uvm_object_utils_end
 
   function string convert2string();
-    return $sformatf("{rdata = %d}",data;
+    return $sformatf("{data = %d}",data;
   endfunction
 endclass
