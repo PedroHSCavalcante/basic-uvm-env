@@ -6,8 +6,8 @@ class refmod extends uvm_component;
     transaction_in tr_in;
     transaction_out tr_out;
     
-    uvm_get_port #(transaction_in) in;
-    uvm_put_port #(transaction_out) out;
+    uvm_analysis_imp #(transaction_in, refmod) in;
+    uvm_analysis_port #(transaction_out) out;
     
     function new(string name = "refmod", uvm_component parent);
         super.new(name, parent);
@@ -22,11 +22,18 @@ class refmod extends uvm_component;
     
     virtual task run_phase(uvm_phase phase);
         super.run_phase(phase);
-        
         forever begin
-            in.get(tr_in);
+            @begin_refmodtask;
+            tr_out = axi4lite_master_transaction#()::type_id::create("tr_out", this);
             tr_out.result = sqrt(tr_in.data);
-            out.put(tr_out);
+            out.write(tr_out);
         end
     endtask: run_phase
+
+    virtual function write ( transaction_in t);
+        tr_in = transaction_in#()::type_id::create("tr_in", this);
+        tr_in.copy(t);
+        $display("TR_IN %h",tr_in.data);
+       -> begin_refmodtask;
+    endfunction
 endclass: refmod
