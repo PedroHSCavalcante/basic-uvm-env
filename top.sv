@@ -1,31 +1,31 @@
+//Top
 module top;
   import uvm_pkg::*;
   import pkg::*;
-  
   logic clk;
   logic rst;
-  
+
   initial begin
     clk = 1;
     rst = 1;
     #20 rst = 0;
     #20 rst = 1;
+
+
   end
-  
+
   always #10 clk = !clk;
+
+  interface_if dut_if(.clk(clk), .rst(rst));
   
-  input_if in(.clk(clk), .rst(rst));
-  output_if out(.clk(clk), .rst(rst));
-  
-  sqrt sqrt(.clk_i(clk),
-            .enb_i(in.enable),
-            .dt_i(in.data_i),
-            .valid_i(in.valid),
-            .ready_o(in.ready),
-            .dt_o(out.data_o),
-            .valid_o(out.valid),
-            .ready_i(out.ready)
-            );
+  sqrt my_sqrt(
+              .clk_i(clk),
+              .rstn_i(rst),
+              .enb_i(dut_if.enb_i),
+              .dt_i(dut_if.dt_i),
+              .busy_o(dut_if.busy_o),
+              .dt_o(dut_if.dt_o)
+  );
 
   initial begin
     `ifdef XCELIUM
@@ -38,10 +38,9 @@ module top;
        $wlfdumpvars();
        set_config_int("*", "recording_detail", 1);
     `endif
-    
-    uvm_config_db#(virtual input_if)::set(uvm_root::get(), "*", "in_vif", in);
-    uvm_config_db#(virtual output_if)::set(uvm_root::get(), "*",  "out_vif", out);
-    
+
+    uvm_config_db#(interface_vif)::set(uvm_root::get(), "*", "vif", dut_if);
+
     run_test("simple_test");
   end
 endmodule

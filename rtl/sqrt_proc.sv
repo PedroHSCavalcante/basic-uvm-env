@@ -1,94 +1,126 @@
-module sqrt_proc
-	(
-    input  logic        clk_i,
-		input  logic [7:0]	dt_i,
-    input  logic        restart_flag_i,
-    input  logic        mux_ctrl1_i,
-    input  logic [1:0]  mux_ctrl2_i,
-		input  logic				d_en_i,
-		input  logic				s_en_i,
-    input  logic        r_en_i,
-		input  logic				op_en_i,
-    output logic [8:0]  s_o,
-    output logic [7:0]  x_o,
-		output logic [7:0]	dt_o
-	);
+module sqrt_proc(
+  input  logic         clk_i,
+  input  logic         rstn_i,
 
-	logic [4:0]	d_r;
-	logic [8:0] s_r;
-	logic [7:0] x_r;
-  logic [3:0] r_r;
+  input  logic         enb_i,
+  input  logic [7:0]   dt_i,
 
-	localparam D_TWO = 8'd2;
-	localparam S_ONE = 8'd1;
+  input  State         state,
 
-	logic [7:0]	mux_output1_w;
-  logic [7:0] mux_output2_w;
-	logic [7:0] operand1_r;
-	logic [7:0] operand2_r;
-	logic [8:0] sum_result_w;
+  output logic [8:0]   d,
+  output logic [8:0]   s,
+  output logic [7:0]   x,
 
-	always_ff @(posedge clk_i)
-	begin
-		if(restart_flag_i)
-			d_r <= 5'h02;
-		else if(d_en_i)
-			d_r <= sum_result_w;
-	end
+  output logic         busy_o,
+  output logic [7:0]   dt_o
+);
 
-	always_ff @(posedge clk_i)
-	begin
-		if(restart_flag_i)
-			s_r <= 9'h04;
-		else if(s_en_i)
-			s_r <= sum_result_w;
-	end
+  logic [8:0]  R1_reg;
+  logic [8:0]  R2_reg;
 
-  always_ff @(posedge clk_i)
-  begin 
-    if(restart_flag_i)
-      x_r <= dt_i;
-  end
+  logic [8:0]  sum;
 
-  always_ff @(posedge clk_i)
-  begin
-    if(restart_flag_i)
-      r_r <= 8'h00;
-    else if(r_en_i)
-      r_r <= d_r >> 1;
-  end
+  logic [8:0]  d_nxt;
+  logic [8:0]  s_nxt;
 
-	always_comb
-	begin
-		unique case(mux_ctrl1_i)
-			1'b0:		  mux_output1_w = s_r;
-			1'b1:		  mux_output1_w = d_r;
-		endcase
-	end
+  logic [7:0]  x_nxt;
 
-  always_comb
-  begin
-    unique case(mux_ctrl2_i)
-      2'b00:    mux_output2_w = d_r;
-      2'b01:    mux_output2_w = S_ONE;
-      2'b10:    mux_output2_w = D_TWO;
-      default:  mux_output2_w = 8'h00;
+  logic [8:0]  R1_nxt;
+  logic [8:0]  R2_nxt;
+
+  logic        busy_o_nxt;
+  logic [7:0]  dt_o_nxt;
+
+
+  always_comb begin
+    d_nxt      = d;
+    s_nxt      = s;
+
+    x_nxt      = x;
+
+    R1_nxt     = R1_reg; 
+    R2_nxt     = R2_reg; 
+
+    busy_o_nxt = busy_o;
+    dt_o_nxt   = dt_o;
+
+    case(state)
+      idle: begin
+        d_nxt = 9'd2;
+        s_nxt = 9'd4;
+
+        busy_o_nxt = 1'b0;
+      end
+      getX: begin
+        x_nxt = dt_i;
+
+        busy_o_nxt = 1'b1;
+      end
+
+      sumD_loadR1: begin
+        R1_nxt = d; 
+      end
+      sumD_loadR2: begin
+        R2_nxt = 9'd2;
+      end
+      sumD_drive: begin
+        d_nxt  = sum;
+      end
+
+      sumS_loadR1: begin
+        R1_nxt = s;
+      end
+      sumS_loadR2_1: begin
+        R2_nxt = d;
+      end
+      sumS_driveR1: begin
+        R1_nxt = sum;
+      end
+      sumS_loadR2_2: begin
+        R2_nxt = 9'd1;
+      end
+      sumS_drive: begin
+        s_nxt  = sum;
+      end
+
+      zero: begin
+	dt_o_nxt   = 0;
+	busy_o_nxt = 0;
+      end
+      finaliza: begin
+        dt_o_nxt = d >> 1;
+      end
     endcase
   end
 
-	always_ff @(posedge clk_i)
-	begin
-		if(op_en_i)
-    begin
-			operand1_r <= mux_output1_w;
-      operand2_r <= mux_output2_w;
+  always_ff @(posedge clk_i, negedge rstn_i) begin
+    if(~rstn_i) begin
+      d      <= 9'd2;
+      s      <= 9'd4;
+
+      x      <= 8'd0;
+
+      R1_reg <= 9'd0; 
+      R2_reg <= 9'd0; 
+
+      dt_o   <= 8'd0;
+      busy_o <= 1'b0;
     end
-	end
+    else 
+      if(enb_i) begin
+        d      <= d_nxt;
+        s      <= s_nxt;
 
-	assign sum_result_w = operand1_r + operand2_r;
+        x      <= x_nxt;
 
-  assign s_o = s_r;
-  assign x_o = x_r;
-  assign dt_o = (x_r == 8'h00) ? (8'h00) : (r_r);
+        R1_reg <= R1_nxt;
+        R2_reg <= R2_nxt;
+	
+	busy_o <= busy_o_nxt;
+        dt_o   <= dt_o_nxt;
+      end
+  end
+
+  assign  sum = R1_reg + R2_reg;
 
 endmodule

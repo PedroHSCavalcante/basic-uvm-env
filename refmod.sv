@@ -1,4 +1,4 @@
-import "DPI-C" context function int sqrt(int x);
+import "DPI-C" context function int my_sqrt(int x);
 
 class refmod extends uvm_component;
     `uvm_component_utils(refmod)
@@ -27,7 +27,7 @@ class refmod extends uvm_component;
         forever begin
             @begin_refmodtask;
             tr_out = transaction_out::type_id::create("tr_out", this);
-            tr_out.result = sqrt(tr_in.data);
+            tr_out.result = my_sqrt(tr_in.data);
             out.write(tr_out);
         end
     endtask: run_phase
@@ -35,7 +35,6 @@ class refmod extends uvm_component;
     virtual function write (transaction_in t);
         tr_in = transaction_in#()::type_id::create("tr_in", this);
         tr_in.copy(t);
-        $display("TR_IN %h",tr_in.data);
        -> begin_refmodtask;
     endfunction
 endclass: refmod
