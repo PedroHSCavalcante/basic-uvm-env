@@ -40,7 +40,7 @@ class monitor extends uvm_monitor;
                     begin_tr(tr_in, "req");
                     tr_in.data = vif.dt_i;
                     req_port.write(tr_in);
-                    @(posedge vif.clk);
+                    @(negedge vif.clk);
                     end_tr(tr_in);
                 end
                 else if(vif.busy_o)begin
@@ -48,6 +48,7 @@ class monitor extends uvm_monitor;
                     begin_tr(tr_out, "resp");
                     tr_out.result = vif.dt_o;
                     resp_port.write(tr_out);
+                    @(negedge vif.clk);
                     end_tr(tr_out);
                 end
             end
