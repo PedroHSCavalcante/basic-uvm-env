@@ -6,7 +6,7 @@ class transaction_out extends uvm_sequence_item;
   endfunction
 
   `uvm_object_param_utils_begin(transaction_out)
-    `uvm_field_int(result, UVM_ALL_ON)
+    `uvm_field_int(result, UVM_UNSIGNED)
   `uvm_object_utils_end
 
   function string convert2string();
