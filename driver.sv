@@ -5,7 +5,6 @@ class driver extends uvm_driver #(transaction_in);
     interface_vif vif;
     event begin_record, end_record;
     transaction_in tr;
-    bit item_done;
 
     function new(string name = "driver", uvm_component parent = null);
         super.new(name, parent);
@@ -19,40 +18,37 @@ class driver extends uvm_driver #(transaction_in);
     endfunction
 
     task run_phase (uvm_phase phase);
-
-        forever begin
-            @(posedge vif.clk) begin
-
-                item_done = 1'b0;
-
-                if(!vif.rst) begin
-                    vif.enb_i   <= '0;  
-                    vif.dt_i    <= '0;
-                    item_done = 0;
-                end
-                else begin
-                    if(tr)begin
-                        if(!vif.busy_o) begin
-                            @(posedge vif.clk);
-                            @(posedge vif.clk);
-                            $display("dt_i = ",tr.data);
-                            vif.dt_i <= tr.data;
-                            vif.enb_i   <= '1;
-                            // wait(vif.busy_o === 1);
-                            item_done = 1;
-                        end
-                    end
-                end
-
-                if (item_done) begin
-                    `uvm_info("ITEM_DONE", $sformatf("Item done."), UVM_HIGH);
-                    seq_item_port.item_done();
-                end
-                if ((item_done || !tr) && vif.rst) begin
-                    seq_item_port.try_next_item(tr);
-                end
-            end
-        end
+        fork
+            reset_signals();
+            get_and_drive(phase);
+        join
     endtask
+
+    virtual task reset_signals();    
+        wait (vif.rst === 0);
+        forever begin
+            vif.enb_i <= '0;  
+            vif.dt_i  <= '0;
+            @(negedge vif.rst);
+        end
+    endtask : reset_signals
+
+    virtual task get_and_drive(uvm_phase phase);
+        wait (vif.rst === 0);
+        @(posedge vif.rst);
+        forever begin
+            seq_item_port.get_next_item(tr);
+            driver_transfer(tr);
+            seq_item_port.item_done();
+        end
+    endtask : get_and_drive
+
+    virtual task driver_transfer(transaction_in tr);
+        @(posedge vif.clk);
+        $display("",);
+        vif.dt_i <= tr.data;
+        vif.enb_i   <= '1;
+        @(posedge vif.busy_o);
+    endtask : driver_transfer
 
 endclass
